@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "scripts": {
     "install": "cd client && npm install --legacy-peer-deps && cd ../server && npm install",
-    "build": "cd client && npm run build"
+    "build": "cd client && npm run build",
+    "start": "cd server && npm start"
   }
 }

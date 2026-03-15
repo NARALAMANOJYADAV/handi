@@ -49,6 +49,8 @@ app.use((err, req, res, next) => {
   });
 });
 
+const path = require('path');
+
 // Connect to MongoDB
 mongoose.connect(MONGODB_URI)
   .then(() => console.log('✅ Connected to MongoDB'))
@@ -57,12 +59,19 @@ mongoose.connect(MONGODB_URI)
     console.log('💡 Make sure MongoDB is running. The server will start anyway for development.');
   });
 
-// Only listen locally if not running in Vercel's serverless environment
-if (process.env.NODE_ENV !== 'production' || process.env.VERCEL !== '1') {
-  app.listen(PORT, () => {
-    console.log(`🚀 HandiVoice Server running on http://localhost:${PORT}`);
+// Serve frontend static files in production
+if (process.env.NODE_ENV === 'production') {
+  const clientBuildPath = path.join(__dirname, '../../client/dist');
+  app.use(express.static(clientBuildPath));
+  
+  // Catch-all route to serve the React index.html for non-API requests
+  app.get('*', (req, res) => {
+    if (!req.path.startsWith('/api')) {
+      res.sendFile(path.join(clientBuildPath, 'index.html'));
+    }
   });
 }
 
-// Export the app for Vercel
-module.exports = app;
+const server = app.listen(PORT, () => {
+  console.log(`🚀 HandiVoice Server running on http://localhost:${PORT}`);
+});
