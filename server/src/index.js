@@ -49,36 +49,20 @@ app.use((err, req, res, next) => {
   });
 });
 
-// Connect to MongoDB and start server
-async function startServer() {
-  try {
-    await mongoose.connect(MONGODB_URI);
-    console.log('✅ Connected to MongoDB');
-
-    app.listen(PORT, () => {
-      console.log(`🚀 HandiVoice Server running on http://localhost:${PORT}`);
-      console.log(`📡 API endpoints:`);
-      console.log(`   POST /api/auth/register`);
-      console.log(`   POST /api/auth/login`);
-      console.log(`   GET  /api/auth/profile`);
-      console.log(`   POST /api/commands`);
-      console.log(`   GET  /api/commands/history`);
-      console.log(`   GET  /api/custom-commands`);
-      console.log(`   POST /api/custom-commands`);
-      console.log(`   GET  /api/settings`);
-      console.log(`   PUT  /api/settings`);
-      console.log(`   POST /api/ai/process`);
-      console.log(`   GET  /api/health`);
-    });
-  } catch (error) {
+// Connect to MongoDB
+mongoose.connect(MONGODB_URI)
+  .then(() => console.log('✅ Connected to MongoDB'))
+  .catch((error) => {
     console.error('❌ Failed to connect to MongoDB:', error.message);
     console.log('💡 Make sure MongoDB is running. The server will start anyway for development.');
+  });
 
-    // Start server even without MongoDB (for frontend development)
-    app.listen(PORT, () => {
-      console.log(`🚀 HandiVoice Server running on http://localhost:${PORT} (no database)`);
-    });
-  }
+// Only listen locally if not running in Vercel's serverless environment
+if (process.env.NODE_ENV !== 'production' || process.env.VERCEL !== '1') {
+  app.listen(PORT, () => {
+    console.log(`🚀 HandiVoice Server running on http://localhost:${PORT}`);
+  });
 }
 
-startServer();
+// Export the app for Vercel
+module.exports = app;
