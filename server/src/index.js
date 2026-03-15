@@ -42,11 +42,19 @@ app.get('/api/health', (req, res) => {
 });
 
 // Connect to MongoDB
+if (!process.env.MONGODB_URI && process.env.NODE_ENV === 'production') {
+  console.warn('⚠️ MONGODB_URI is not set in production! Falling back to localhost, which will likely fail on Render.');
+}
+
 mongoose.connect(MONGODB_URI)
   .then(() => console.log('✅ Connected to MongoDB'))
   .catch((error) => {
     console.error('❌ Failed to connect to MongoDB:', error.message);
-    console.log('💡 Make sure MongoDB is running.');
+    if (process.env.NODE_ENV === 'production') {
+      console.log('💡 PRO TIP: On Render, make sure you have added MONGODB_URI in your Environment Variables.');
+    } else {
+      console.log('💡 Make sure local MongoDB is running.');
+    }
   });
 
 // Serve frontend static files in production
