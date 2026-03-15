@@ -9,6 +9,10 @@
       }
     },
     {
+      "src": "server/package.json",
+      "use": "@vercel/node"
+    },
+    {
       "src": "server/src/index.js",
       "use": "@vercel/node"
     }
@@ -19,11 +23,16 @@
       "dest": "/server/src/index.js"
     },
     {
-      "handle": "filesystem"
+      "src": "/assets/(.*)",
+      "dest": "/client/dist/assets/$1"
+    },
+    {
+      "src": "/(.*)\\.(js|css|png|jpg|jpeg|gif|svg|ico|woff|woff2)",
+      "dest": "/client/dist/$1.$2"
     },
     {
       "src": "/(.*)",
-      "dest": "/index.html"
+      "dest": "/client/dist/index.html"
     }
   ]
 }
