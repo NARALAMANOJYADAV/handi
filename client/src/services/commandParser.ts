@@ -240,6 +240,28 @@ function translateToEnglish(text: string, language: SupportedLanguage): string {
 export function parseCommand(text: string, language: SupportedLanguage = 'en-US'): ParsedCommand {
   // Translate if not English
   const normalizedText = translateToEnglish(text, language).trim();
+  const lower = normalizedText.toLowerCase();
+
+  // Local Chat / Greeting handling for real-time feel
+  if (/^(hi|hello|hey|good morning|good afternoon|good evening|namaste)/i.test(lower)) {
+    return {
+      intent: 'chat',
+      action: 'chat',
+      response: "Hello! How can I help you today?",
+      rawText: text,
+      confidence: 0.9,
+    };
+  }
+
+  if (/who are you/i.test(lower)) {
+    return {
+      intent: 'chat',
+      action: 'chat',
+      response: "I am HandiVoice, your voice-controlled accessibility assistant.",
+      rawText: text,
+      confidence: 0.9,
+    };
+  }
   
   // Try each pattern
   for (const cmdPattern of COMMAND_PATTERNS) {

@@ -58,34 +58,69 @@ router.post('/process', async (req, res) => {
 });
 
 function basicNlpProcess(text, language) {
-  const lower = text.toLowerCase();
+  const lower = text.toLowerCase().trim();
   
+  // Handle greetings and basic conversation even in basic mode
+  if (/^(hi|hello|hey|good morning|good afternoon|good evening|namaste)/i.test(lower)) {
+    return {
+      intent: 'chat',
+      response: "Hello! How can I help you today?",
+      actions: []
+    };
+  }
+
+  if (/who are you/i.test(lower)) {
+    return {
+      intent: 'chat',
+      response: "I am HandiVoice, your voice-controlled accessibility assistant.",
+      actions: []
+    };
+  }
+
+  if (/(time|date)/i.test(lower)) {
+    const intent = lower.includes('time') ? 'get_time' : 'get_date';
+    return { intent, actions: [{ type: 'navigate', target: intent }] };
+  }
+
   // Multi-step command detection
   const steps = lower.split(/\s+and\s+/);
   const actions = [];
+  let intent = 'unknown';
 
   for (const step of steps) {
-    if (/open\s+/.test(step)) {
-      const target = step.replace(/(?:can you |please )?open\s+/i, '').trim();
-      actions.push({ type: 'open_url', target });
+    if (/open\s+|navigate to|go to/.test(step)) {
+      const target = step.replace(/(?:can you |please )?(?:open|navigate to|go to)\s+/i, '').replace(/\s+app$/i, '').trim();
+      if (target.includes('train')) {
+        intent = 'open_app';
+        actions.push({ type: 'open_url', target: 'where is my train' });
+      } else {
+        intent = 'open_website';
+        actions.push({ type: 'open_url', target });
+      }
     } else if (/search\s+/.test(step)) {
       const query = step.replace(/(?:search|search for|look up)\s+/i, '').trim();
+      intent = 'search';
       actions.push({ type: 'search', value: query });
     } else if (/play\s+/.test(step)) {
+      intent = 'play_video';
       actions.push({ type: 'click', target: 'play' });
-    } else if (/read\s+/.test(step)) {
-      actions.push({ type: 'navigate', target: 'read' });
     } else if (/scroll\s+/.test(step)) {
       const dir = step.includes('up') ? 'up' : 'down';
+      intent = 'scroll';
       actions.push({ type: 'scroll', target: dir });
     }
   }
 
   if (actions.length === 0) {
-    actions.push({ type: 'navigate', target: 'unknown', value: text });
+    // If we don't know the command, treat it as a chat query to avoid "I don't understand"
+    return {
+      intent: 'chat',
+      response: `You said: "${text}". I'm not sure how to do that yet, but I'm learning!`,
+      actions: []
+    };
   }
 
-  return { intent: actions[0]?.type || 'unknown', actions };
+  return { intent, actions };
 }
 
 module.exports = router;
