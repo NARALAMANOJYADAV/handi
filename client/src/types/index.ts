@@ -33,6 +33,7 @@ export interface ParsedCommand {
   action: string;
   target?: string;
   value?: string;
+  response?: string;
   rawText: string;
   confidence: number;
 }
@@ -63,6 +64,7 @@ export type CommandIntent =
   | 'get_time'
   | 'get_date'
   | 'open_app'
+  | 'chat'
   | 'unknown';
 
 export interface User {

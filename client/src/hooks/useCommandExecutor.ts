@@ -80,6 +80,7 @@ export function useCommandExecutor(
               action: aiRes.data.intent.replace(/_/g, ' '),
               target: firstAction?.target,
               value: firstAction?.value,
+              response: (aiRes.data as any).response,
               rawText: text,
               confidence: 0.9,
             };
@@ -319,12 +320,20 @@ export function useCommandExecutor(
           break;
         }
 
+        case 'chat':
+          feedback = createFeedback(
+            text,
+            'Chat response',
+            parsed.response || 'I am here to help you.'
+          );
+          break;
+
         default:
           feedback = createFeedback(
             text,
-            `Unknown command: ${text}`,
-            `Sorry, I didn't understand that command. Please try again.`,
-            'error'
+            parsed.intent === 'unknown' ? `Unknown command: ${text}` : `Action: ${parsed.intent}`,
+            parsed.response || `Sorry, I didn't understand the command "${text}". Please try again.`,
+            parsed.intent === 'unknown' ? 'error' : 'success'
           );
       }
 
