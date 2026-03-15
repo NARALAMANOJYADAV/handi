@@ -4,6 +4,7 @@ const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
 require('dotenv').config();
+const path = require('path');
 
 const authRoutes = require('./routes/auth');
 const commandRoutes = require('./routes/commands');
@@ -40,6 +41,33 @@ app.get('/api/health', (req, res) => {
   });
 });
 
+// Connect to MongoDB
+mongoose.connect(MONGODB_URI)
+  .then(() => console.log('✅ Connected to MongoDB'))
+  .catch((error) => {
+    console.error('❌ Failed to connect to MongoDB:', error.message);
+    console.log('💡 Make sure MongoDB is running.');
+  });
+
+// Serve frontend static files in production
+if (process.env.NODE_ENV === 'production') {
+  const clientBuildPath = path.resolve(__dirname, '../../client/dist');
+  console.log(`📂 Serving static files from: ${clientBuildPath}`);
+  
+  app.use(express.static(clientBuildPath));
+  
+  // Catch-all route to serve the React index.html
+  app.use((req, res, next) => {
+    if (!req.path.startsWith('/api')) {
+      const indexPath = path.resolve(clientBuildPath, 'index.html');
+      console.log(`📄 Fallback: Sending index.html to ${req.url}`);
+      res.sendFile(indexPath);
+    } else {
+      next();
+    }
+  });
+}
+
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error('Unhandled error:', err);
@@ -49,28 +77,6 @@ app.use((err, req, res, next) => {
   });
 });
 
-const path = require('path');
-
-// Connect to MongoDB
-mongoose.connect(MONGODB_URI)
-  .then(() => console.log('✅ Connected to MongoDB'))
-  .catch((error) => {
-    console.error('❌ Failed to connect to MongoDB:', error.message);
-    console.log('💡 Make sure MongoDB is running. The server will start anyway for development.');
-  });
-
-// Serve frontend static files in production
-if (process.env.NODE_ENV === 'production') {
-  const clientBuildPath = path.join(__dirname, '../../client/dist');
-  app.use(express.static(clientBuildPath));
-  
-  // Catch-all route to serve the React index.html for non-API requests
-  app.get('*', (req, res) => {
-    if (!req.path.startsWith('/api')) {
-      res.sendFile(path.join(clientBuildPath, 'index.html'));
-    }
-  });
-}
 
 const server = app.listen(PORT, () => {
   console.log(`🚀 HandiVoice Server running on http://localhost:${PORT}`);
