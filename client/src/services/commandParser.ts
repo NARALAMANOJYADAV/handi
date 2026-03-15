@@ -165,6 +165,38 @@ const COMMAND_PATTERNS: CommandPattern[] = [
     patterns: [/open\s+(?:the\s+)?menu/i, /show\s+(?:the\s+)?menu/i],
     intent: 'open_menu',
   },
+  // Time and Date
+  {
+    patterns: [
+      /(?:what is|what's|tell me|show)\s+(?:the\s+)?time/i,
+      /current\s+time/i,
+      /time\s+check/i
+    ],
+    intent: 'get_time',
+  },
+  {
+    patterns: [
+      /(?:what is|what's|tell me|show)\s+(?:the\s+)?(?:date|day)/i,
+      /today's\s+date/i,
+      /current\s+date/i
+    ],
+    intent: 'get_date',
+  },
+  // Open Apps
+  {
+    patterns: [
+      /open\s+(?:the\s+)?(.+)\s+app/i,
+      /launch\s+(.+)\s+app/i,
+      /where is my train/i
+    ],
+    intent: 'open_app',
+    extractParams: (match, fullText) => {
+      if (fullText.toLowerCase().includes('where is my train')) {
+        return { target: 'where is my train' };
+      }
+      return { target: match[1]?.trim() };
+    },
+  },
   // Reader mode
   {
     patterns: [/(?:reader|reading|focus)\s+mode/i, /(?:enable|turn on)\s+(?:reader|reading|focus)\s+mode/i],
@@ -181,7 +213,8 @@ const LANGUAGE_KEYWORDS: Record<SupportedLanguage, Partial<Record<string, string
     'क्लिक': 'click', 'पीछे': 'back', 'आगे': 'forward',
     'पढ़ो': 'read', 'रुको': 'stop', 'लिखो': 'type',
     'चलाओ': 'play', 'रोको': 'pause', 'मदद': 'help',
-    'पेज': 'page', 'बटन': 'button',
+    'पेज': 'page', 'बटन': 'button', 'समय': 'time', 'तारीख': 'date',
+    'ट्रेन': 'train',
   },
   'te-IN': {
     'తెరవు': 'open', 'వెతుకు': 'search',
@@ -189,6 +222,7 @@ const LANGUAGE_KEYWORDS: Record<SupportedLanguage, Partial<Record<string, string
     'క్లిక్': 'click', 'వెనక్కి': 'back', 'ముందుకు': 'forward',
     'చదవు': 'read', 'ఆపు': 'stop', 'టైప్': 'type',
     'ప్లే': 'play', 'పాజ్': 'pause', 'సహాయం': 'help',
+    'సమయం': 'time', 'తేదీ': 'date', 'ట్రైన్': 'train',
   },
 };
 

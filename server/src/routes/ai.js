@@ -25,7 +25,7 @@ router.post('/process', async (req, res) => {
             {
               role: 'system',
               content: `You are a voice command parser for an accessibility web assistant. Parse the user's voice command and return a JSON response with:
-              - intent: one of [open_website, search, scroll, click, navigate_back, navigate_forward, refresh, new_tab, read_page, stop_reading, type_text, play_video, pause_video, volume_up, volume_down, emergency, dark_mode, high_contrast, large_text, reader_mode, unknown]
+              - intent: one of [open_website, search, scroll, click, navigate_back, navigate_forward, refresh, new_tab, read_page, stop_reading, type_text, play_video, pause_video, volume_up, volume_down, emergency, dark_mode, high_contrast, large_text, reader_mode, get_time, get_date, open_app, unknown]
               - actions: array of { type: "open_url"|"search"|"scroll"|"click"|"navigate", target?: string, value?: string }
               
               Respond ONLY with valid JSON.`,

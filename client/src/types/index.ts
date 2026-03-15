@@ -60,6 +60,9 @@ export type CommandIntent =
   | 'large_text'
   | 'reader_mode'
   | 'custom_command'
+  | 'get_time'
+  | 'get_date'
+  | 'open_app'
   | 'unknown';
 
 export interface User {

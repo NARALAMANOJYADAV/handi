@@ -2,7 +2,7 @@ import { useCallback } from 'react';
 import type { ParsedCommand, CommandFeedback, SupportedLanguage, CustomCommand } from '../types';
 import { parseCommand, getWebsiteUrl, getScrollAmount, buildSearchUrl } from '../services/commandParser';
 import { speechService } from '../services/speechService';
-import { commandApi } from '../services/api';
+import { commandApi, aiApi } from '../services/api';
 
 interface UseCommandExecutorReturn {
   executeCommand: (text: string, customCommands?: CustomCommand[]) => Promise<CommandFeedback>;
@@ -67,7 +67,27 @@ export function useCommandExecutor(
       }
 
       // Parse the command
-      const parsed: ParsedCommand = parseCommand(text, language);
+      let parsed: ParsedCommand = parseCommand(text, language);
+
+      // If unknown, try AI backend
+      if (parsed.intent === 'unknown') {
+        try {
+          const aiRes = await aiApi.processCommand(text, language);
+          if (aiRes.data && aiRes.data.intent !== 'unknown') {
+            const firstAction = aiRes.data.actions?.[0];
+            parsed = {
+              intent: aiRes.data.intent as any,
+              action: aiRes.data.intent.replace(/_/g, ' '),
+              target: firstAction?.target,
+              value: firstAction?.value,
+              rawText: text,
+              confidence: 0.9,
+            };
+          }
+        } catch (err) {
+          console.error('AI Processing failed:', err);
+        }
+      }
 
       let feedback: CommandFeedback;
 
@@ -252,6 +272,52 @@ export function useCommandExecutor(
         case 'open_menu':
           feedback = createFeedback(text, 'Opening menu', 'Opening the menu');
           break;
+        
+        case 'get_time': {
+          const now = new Date();
+          const timeString = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+          feedback = createFeedback(text, `Time: ${timeString}`, `The current time is ${timeString}`);
+          break;
+        }
+
+        case 'get_date': {
+          const now = new Date();
+          const dateString = now.toLocaleDateString([], { weekday: 'long', month: 'long', day: 'numeric' });
+          feedback = createFeedback(text, `Date: ${dateString}`, `Today is ${dateString}`);
+          break;
+        }
+
+        case 'open_app': {
+          const appName = parsed.target?.toLowerCase() || '';
+          let appId = '';
+          let appUrl = '';
+          let scheme = '';
+          
+          if (appName.includes('where is my train') || appName.includes('train')) {
+            appId = 'com.whereismytrain.android';
+            appUrl = `https://play.google.com/store/apps/details?id=${appId}`;
+            scheme = 'intent://#Intent;package=com.whereismytrain.android;end';
+            feedback = createFeedback(text, 'Opening Where Is My Train', 'Attempting to open Where Is My Train or redirecting to Play Store');
+          } else {
+            // Generic app handling
+            feedback = createFeedback(text, `Searching for ${appName} app`, `I'll search for the ${appName} app for you`);
+            window.open(`https://play.google.com/store/search?q=${encodeURIComponent(appName)}&c=apps`, '_blank');
+            break;
+          }
+
+          if (appId) {
+            // Attempt to open the app via deep link
+            window.location.href = scheme || `intent://#Intent;package=${appId};end`;
+            
+            // Redirect to Play Store after a short delay if the app didn't open
+            setTimeout(() => {
+              if (document.visibilityState === 'visible') {
+                window.open(appUrl, '_blank');
+              }
+            }, 1500);
+          }
+          break;
+        }
 
         default:
           feedback = createFeedback(

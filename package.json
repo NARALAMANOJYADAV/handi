@@ -4,6 +4,7 @@
   "scripts": {
     "install": "cd client && npm install --legacy-peer-deps && cd ../server && npm install",
     "build": "cd client && npm run build",
-    "start": "cd server && npm start"
+    "start": "cd server && npm start",
+    "dev": "npm install concurrently --no-save && npx concurrently \"cd server && npm run dev\" \"cd client && npm run dev\""
   }
 }
